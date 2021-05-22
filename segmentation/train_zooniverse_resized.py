@@ -64,7 +64,7 @@ transformer = transforms.Compose([
     transforms.ToTensor(),
     normalize,
 ])
-dataset = ImageFolder(root="../../DATASETS/CLASSIF_RESIZED/", transform=transformer)
+dataset = ImageFolder(root="~/DATASETS/CLASSIF_RESIZED/", transform=transformer)
 n = len(dataset)
 n_test = int(0.1 * n)  # take ~10% for test
 train_set, test_set = torch.utils.data.random_split(dataset, [len(dataset)-n_test, n_test])
