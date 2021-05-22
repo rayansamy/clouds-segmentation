@@ -31,8 +31,6 @@ config.epochs = EPOCHS
 config.percentage_test = PERCENTAGE_TEST
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
-
-
 class CNet(nn.Module):
     def __init__(self):
         super(Net, self).__init__()
