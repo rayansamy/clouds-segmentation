@@ -19,38 +19,31 @@ from collections import OrderedDict
 import pandas as pd
 import os
 import gc
+import argparse, sys
 
-EPOCHS = 50
-LEARNING_RATE = 0.0001
-BATCH_SIZE = 16
-PERCENTAGE_TEST = 0.2
 
+parser=argparse.ArgumentParser()
+
+parser.add_argument('--lr', help='Learning Rate, default = 0.0001', type=int, default=0.0001)
+parser.add_argument('--epochs', help='Number of epochs, default = 100', type=int, default=100)
+parser.add_argument('--load_trained', help='Load existing model', type=bool, default=False)
+parser.add_argument('--test_percentage', help='Percentage of training dataset, default=0.3', type=int, default=0.3)
+parser.add_argument('--path_image_folder', help='Path to the dataset (ImageFolder scheme).', type=str, default="../../DATASETS/CLASSIF_RESIZED/")
+
+args=parser.parse_args()
+
+
+
+
+EPOCHS = args.epochs
+LEARNING_RATE = args.lr
+PERCENTAGE_TEST = args.test_percentage
+IMAGE_FOLDER = args.path_image_folder
 config.learning_rate = LEARNING_RATE
-config.batch_size = BATCH_SIZE
 config.dataset = "ZOONIVERSE RESIZED"
 config.epochs = EPOCHS
 config.percentage_test = PERCENTAGE_TEST
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-
-class CNet(nn.Module):
-    def __init__(self):
-        super(Net, self).__init__()
-        self.conv1 = nn.Conv2d(3, 6, 5)
-        self.pool = nn.MaxPool2d(2, 2)
-        self.conv2 = nn.Conv2d(6, 16, 5)
-        self.fc1 = nn.Linear(16 * 5 * 5, 120)
-        self.fc2 = nn.Linear(120, 84)
-        self.fc3 = nn.Linear(84, 10)
-
-    def forward(self, x):
-        x = self.pool(F.relu(self.conv1(x)))
-        x = self.pool(F.relu(self.conv2(x)))
-        x = x.view(-1, 16 * 5 * 5)
-        x = F.relu(self.fc1(x))
-        x = F.relu(self.fc2(x))
-        x = self.fc3(x)
-        return x
-
 
 
 normalize = transforms.Normalize(
@@ -63,7 +56,7 @@ transformer = transforms.Compose([
     transforms.ToTensor(),
     normalize,
 ])
-dataset = ImageFolder(root="../../DATASETS/CLASSIF_RESIZED/", transform=transformer)
+dataset = ImageFolder(root=IMAGE_FOLDER, transform=transformer)
 n = len(dataset)
 n_test = int(0.1 * n)  # take ~10% for test
 train_set, test_set = torch.utils.data.random_split(dataset, [len(dataset)-n_test, n_test], generator=torch.Generator().manual_seed(42))
@@ -100,7 +93,7 @@ def accuracy(out, labels):
     return torch.sum(pred==labels).item()
 
 PATH = "zooniverse-resized-image_net_model.checkpt"
-if os.path.isfile(PATH):
+if args.load_trained and os.path.isfile(PATH):
     print("LOADED MODEL") 
     net = torch.load(PATH)
 
@@ -126,12 +119,6 @@ for epoch in range(EPOCHS):
         b_y = Variable(y).to(device)   # batch y (target)
         
         output = net(b_x)#.argmax(dim=1)
-        """
-        print("b_y : "+str(b_y))
-        print("shape b_y : "+str(b_y.shape))    
-        print("output : "+str(output))
-        print("shape output : "+str(output.shape))
-        """
         loss = loss_func(output, b_y)   
         optimizer.zero_grad()           
         loss.backward()                 
@@ -148,7 +135,6 @@ for epoch in range(EPOCHS):
                     inputs, labels = inputs.to(device), labels.to(device)
                     logps = net(inputs)
                     batch_loss = loss_func(logps, labels)
-                    
                     test_loss += batch_loss.item()
                     
                     # Calculate accuracy
