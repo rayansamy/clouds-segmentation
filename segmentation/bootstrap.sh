@@ -9,4 +9,4 @@
 #SBATCH --gres=gpu:1
 #SBATCH --gres-flags=enforce-binding
 
-python train_zooniverse_resized.py --load_trained 
+python train_zooniverse_resized.py --load_trained True
