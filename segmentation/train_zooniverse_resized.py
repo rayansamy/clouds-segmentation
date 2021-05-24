@@ -23,7 +23,7 @@ import argparse, sys
 
 
 parser=argparse.ArgumentParser()
-
+BATCH_SIZE = 64
 parser.add_argument('--lr', help='Learning Rate, default = 0.0001', type=int, default=0.0001)
 parser.add_argument('--epochs', help='Number of epochs, default = 100', type=int, default=100)
 parser.add_argument('--load_trained', help='Load existing model', type=bool, default=False)
