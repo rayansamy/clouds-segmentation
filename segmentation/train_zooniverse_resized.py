@@ -17,7 +17,8 @@ from torch.utils.data import Dataset, DataLoader
 from torch.autograd import Variable
 from collections import OrderedDict
 import pandas as pd
-
+import os
+import gc
 
 EPOCHS = 50
 LEARNING_RATE = 0.0001
@@ -62,10 +63,10 @@ transformer = transforms.Compose([
     transforms.ToTensor(),
     normalize,
 ])
-dataset = ImageFolder(root="~/DATASETS/CLASSIF_RESIZED/", transform=transformer)
+dataset = ImageFolder(root="../../DATASETS/CLASSIF_RESIZED/", transform=transformer)
 n = len(dataset)
 n_test = int(0.1 * n)  # take ~10% for test
-train_set, test_set = torch.utils.data.random_split(dataset, [len(dataset)-n_test, n_test])
+train_set, test_set = torch.utils.data.random_split(dataset, [len(dataset)-n_test, n_test], generator=torch.Generator().manual_seed(42))
 
 
 config.number_train_images = len(train_set)
@@ -98,29 +99,17 @@ def accuracy(out, labels):
     _,pred = torch.max(out, dim=1)
     return torch.sum(pred==labels).item()
 
-
+PATH = "zooniverse-resized-image_net_model.checkpt"
+if os.path.isfile(PATH):
+    print("LOADED MODEL") 
+    net = torch.load(PATH)
 
 print("NET : "+str(net))
-input = torch.randn(3, 5, requires_grad=True)
-# every element in target should have 0 <= value < C
-target = torch.tensor([1, 0, 4])
-
-m = nn.LogSoftmax(dim=1)
-nll_loss = nn.NLLLoss()
-output = nll_loss(m(input), target)
-output.backward()
-
-print("LogSoftMax shape : "+str(m(input).shape))
-print("Target shape : "+str(target.shape))
-
-print('input: ', input)
-print('target: ', target)
-print('output: ', output)
+net.train()
 
 
 
 
-import gc
 #del variables
 gc.collect()
 torch.cuda.empty_cache()
