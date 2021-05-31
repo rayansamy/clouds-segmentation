@@ -24,11 +24,11 @@ import argparse, sys
 
 parser=argparse.ArgumentParser()
 BATCH_SIZE = 64
-parser.add_argument('--lr', help='Learning Rate, default = 0.0001', type=int, default=0.0001)
-parser.add_argument('--epochs', help='Number of epochs, default = 100', type=int, default=100)
+parser.add_argument('--lr', help='Learning Rate, default = 0.0001', type=int, default=0.00001)
+parser.add_argument('--epochs', help='Number of epochs, default = 100', type=int, default=300)
 parser.add_argument('--load_trained', help='Load existing model', type=bool, default=False)
 parser.add_argument('--test_percentage', help='Percentage of training dataset, default=0.3', type=int, default=0.3)
-parser.add_argument('--path_image_folder', help='Path to the dataset (ImageFolder scheme).', type=str, default="../../DATASETS/CLASSIF_RESIZED/")
+parser.add_argument('--path_image_folder', help='Path to the dataset (ImageFolder scheme).', type=str, default="../../DATASETS/CLASSIF_BIGGEST_SQUARE/")
 
 args=parser.parse_args()
 
@@ -40,7 +40,7 @@ LEARNING_RATE = args.lr
 PERCENTAGE_TEST = args.test_percentage
 IMAGE_FOLDER = args.path_image_folder
 config.learning_rate = LEARNING_RATE
-config.dataset = "ZOONIVERSE RESIZED"
+config.dataset = "ZOONIVERSE MAX SQUARE"
 config.epochs = EPOCHS
 config.percentage_test = PERCENTAGE_TEST
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -92,7 +92,7 @@ def accuracy(out, labels):
     _,pred = torch.max(out, dim=1)
     return torch.sum(pred==labels).item()
 
-PATH = "zooniverse-resized-image_net_model.checkpt"
+PATH = "zooniverse-maxsquare-image_net_model.checkpt"
 if args.load_trained and os.path.isfile(PATH):
     print("LOADED MODEL") 
     net = torch.load(PATH)
@@ -155,9 +155,9 @@ for epoch in range(EPOCHS):
                   f"Test accuracy: {accuracy/len(test_dataloader):.3f}")
             running_loss = 0
             net.train()
-            torch.save(net, "zooniverse-resized-image_net_model.checkpt")
-            wandb.save("zooniverse-all-resized_net_model.checkpt")
+            torch.save(net, "zooniverse-maxsquare-image_net_model.checkpt")
+            wandb.save("zooniverse-all-maxsquare_net_model.checkpt")
 
 
-torch.save(net.state_dict(), "zooniverse-resized-image_state_dict")
-torch.save(net, "zooniverse-resized-image_net_model")
+torch.save(net.state_dict(), "zooniverse-maxsquare-image_state_dict")
+torch.save(net, "zooniverse-maxsquare-image_net_model")
