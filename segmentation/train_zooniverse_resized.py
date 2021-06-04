@@ -24,12 +24,12 @@ import argparse, sys
 
 parser=argparse.ArgumentParser()
 BATCH_SIZE = 64
-parser.add_argument('--lr', help='Learning Rate, default = 0.0001', type=int, default=0.00001)
+parser.add_argument('--lr', help='Learning Rate, default = 0.0001', type=int, default=0.0001)
 parser.add_argument('--epochs', help='Number of epochs, default = 100', type=int, default=300)
 parser.add_argument('--load_trained', help='Load existing model', type=bool, default=False)
 parser.add_argument('--test_percentage', help='Percentage of training dataset, default=0.3', type=int, default=0.3)
-parser.add_argument('--path_image_folder', help='Path to the dataset (ImageFolder scheme).', type=str, default="../../DATASETS/CLASSIF_BIGGEST_SQUARE/")
-
+parser.add_argument('--path_image_folder', help='Path to the dataset (ImageFolder scheme).', type=str, default="../../DATASETS/CLASSIF_RESIZED")
+#../../DATASETS/CLASSIF_BIGGEST_SQUARE/"
 args=parser.parse_args()
 
 
@@ -40,7 +40,7 @@ LEARNING_RATE = args.lr
 PERCENTAGE_TEST = args.test_percentage
 IMAGE_FOLDER = args.path_image_folder
 config.learning_rate = LEARNING_RATE
-config.dataset = "ZOONIVERSE MAX SQUARE"
+config.dataset = "ZOONIVERSE RESIZED"
 config.epochs = EPOCHS
 config.percentage_test = PERCENTAGE_TEST
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -51,7 +51,7 @@ normalize = transforms.Normalize(
         std=[0.229, 0.224, 0.225],
     )
 transformer = transforms.Compose([
-    transforms.Resize([768, 512]),
+    transforms.Resize([256, 256]),
     # you can add other transformations in this list
     transforms.ToTensor(),
     normalize,
@@ -70,15 +70,27 @@ train_dataloader  = DataLoader(train_set, batch_size=BATCH_SIZE, shuffle=True, n
 test_dataloader  = DataLoader(test_set, batch_size=BATCH_SIZE, shuffle=True, num_workers=1)
 
 
-pretrained_model = models.resnet18(pretrained=True)
+pretrained_model = models.resnet50(pretrained=True)
 for param in pretrained_model.parameters():
     param.requires_grad = False
 
 pretrained_model.fc = nn.Sequential(
-    nn.Linear(512, 100),
+    nn.Linear(2048, 1000),
     nn.ReLU(),
     nn.Dropout(0.5),
-
+    
+    nn.Linear(1000, 500),
+    nn.ReLU(),
+    nn.Dropout(0.5),
+    
+    nn.Linear(500, 200),
+    nn.ReLU(),
+    nn.Dropout(0.5),
+    
+    nn.Linear(200, 100),
+    nn.ReLU(),
+    nn.Dropout(0.5),
+    
     nn.Linear(100, 20),
     nn.ReLU(),
     nn.Dropout(0.5),
@@ -92,7 +104,7 @@ def accuracy(out, labels):
     _,pred = torch.max(out, dim=1)
     return torch.sum(pred==labels).item()
 
-PATH = "zooniverse-maxsquare-image_net_model.checkpt"
+PATH = "zooniverse-RESIZED-image_net_model.checkpt"
 if args.load_trained and os.path.isfile(PATH):
     print("LOADED MODEL") 
     net = torch.load(PATH)
@@ -155,9 +167,9 @@ for epoch in range(EPOCHS):
                   f"Test accuracy: {accuracy/len(test_dataloader):.3f}")
             running_loss = 0
             net.train()
-            torch.save(net, "zooniverse-maxsquare-image_net_model.checkpt")
-            wandb.save("zooniverse-all-maxsquare_net_model.checkpt")
+            torch.save(net, "zooniverse-RESIZED-image_net_model.checkpt")
+            wandb.save("zooniverse-RESIZED_net_model.checkpt")
 
 
-torch.save(net.state_dict(), "zooniverse-maxsquare-image_state_dict")
-torch.save(net, "zooniverse-maxsquare-image_net_model")
+torch.save(net.state_dict(), "zooniverse-RESIZED-image_state_dict")
+torch.save(net, "zooniverse-RESIZED-image_net_model")
